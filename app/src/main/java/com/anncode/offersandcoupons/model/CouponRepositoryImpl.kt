@@ -1,28 +1,36 @@
 package com.anncode.offersandcoupons.model
 
 import android.util.Log
-import com.anncode.offersandcoupons.R
-import com.anncode.offersandcoupons.presenter.CouponPresenter
-import com.anncode.offersandcoupons.view.RecyclerCouponsAdapter
+import androidx.lifecycle.MutableLiveData
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class CouponRepositoryImpl(var couponPresenter: CouponPresenter) : CouponRepository {
+class CouponRepositoryImpl : CouponRepository {
+
+    private var coupons = MutableLiveData<List<Coupon>>()
+    //Subject MutableLiveData
+    //Observers List Coupon
+    //Change List Coupon - MutableLiveData
+    //Observe
+
+    override fun getCoupons(): MutableLiveData<List<Coupon>>{
+        return coupons
+    }
 
     // Toda la logica de conexion
-    override fun getCouponsAPI() {
+    override fun callCouponsAPI() {
         // CONTROLLER
-        val coupons: ArrayList<Coupon>? = ArrayList<Coupon>()
+        val couponsList: ArrayList<Coupon>? = ArrayList<Coupon>()
         val apiAdapter = ApiAdapter()
         val apiService = apiAdapter.getClientService()
         val call = apiService.getCoupons()
 
         call.enqueue(object : Callback<JsonObject> {
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                Log.e("ERROR: ", t.message)
+                t.message?.let { Log.e("ERROR: ", it) }
                 t.stackTrace
             }
 
@@ -31,15 +39,12 @@ class CouponRepositoryImpl(var couponPresenter: CouponPresenter) : CouponReposit
                 offersJsonArray?.forEach { jsonElement: JsonElement ->
                     val jsonObject = jsonElement.asJsonObject
                     val coupon = Coupon(jsonObject)
-                    coupons?.add(coupon)
+                    couponsList?.add(coupon)
                 }
-                couponPresenter.showCoupons(coupons)
+                coupons.value = couponsList
             }
-
-
         })
         // CONTROLLER
 
-        //couponPresenter.showCoupons()
     }
 }
